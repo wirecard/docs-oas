@@ -1,0 +1,74 @@
+{
+    "payment": {
+      "statuses": {
+        "status": [
+          {
+            "code": "201.0000",
+            "description": "3d-acquirer:The resource was successfully created.",
+            "severity": "information"
+          },
+          {
+            "code": "200.1083",
+            "description": "3d-acquirer:Cardholder Successfully authenticated.",
+            "severity": "information"
+          }
+        ]
+      },
+      "card": {
+        "expiration-month": 1,
+        "expiration-year": 2023,
+        "card-type": "visa"
+      },
+      "merchant-account-id": {
+        "value": "cad16b4a-abf2-450d-bcb8-1725a4cef443",
+        "ref": "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+      },
+      "transaction-id": "5f9f3fd4-edea-4510-8552-a8b79504929f",
+      "request-id": "415e3988-c8dd-4b3c-96f4-27cd9c70a9ff",
+      "transaction-type": "void-authorization",
+      "transaction-state": "success",
+      "completion-time-stamp": 1590670383000,
+      "requested-amount": {
+        "value": 30.9,
+        "currency": "EUR"
+      },
+      "parent-transaction-id": "84298e53-2a34-4492-b9e0-2efed81a4ea4",
+      "account-holder": {
+        "first-name": "Jane",
+        "last-name": "Doe"
+      },
+      "card-token": {
+        "token-id": "4304509873471003",
+        "masked-account-number": "401200******1003"
+      },
+      "custom-fields": {
+        "custom-field": [
+          {
+            "field-name": "elastic-page-api.3d.original_txn_type",
+            "field-value": "authorization"
+          }
+        ]
+      },
+      "payment-methods": {
+        "payment-method": [
+          {
+            "name": "creditcard"
+          }
+        ]
+      },
+      "parent-transaction-amount": {
+        "value": 30.9,
+        "currency": "EUR"
+      },
+      "authorization-code": "328845",
+      "three-d": {
+        "cardholder-authentication-status": "Y"
+      },
+      "api-id": "elastic-api",
+      "cancel-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/cancel",
+      "fail-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/error",
+      "success-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/success",
+      "provider-account-id": "70003",
+      "self": "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/5f9f3fd4-edea-4510-8552-a8b79504929f"
+    }
+  }

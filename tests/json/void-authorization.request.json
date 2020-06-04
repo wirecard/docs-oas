@@ -1,0 +1,10 @@
+{
+    "payment": {
+      "merchant-account-id": {
+        "value": "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+      },
+      "request-id": "415e3988-c8dd-4b3c-96f4-27cd9c70a9ff",
+      "transaction-type": "void-authorization",
+      "parent-transaction-id": "84298e53-2a34-4492-b9e0-2efed81a4ea4"
+    }
+  }

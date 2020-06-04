@@ -1,0 +1,14 @@
+{
+  "payment": {
+    "merchant-account-id": {
+      "value": "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+    },
+    "request-id": "a1820099-cb25-4799-8e48-afdabb1f4222",
+    "transaction-type": "refund-purchase",
+    "parent-transaction-id": "68550294-2571-49d6-abd6-b90de6aff774",
+    "requested-amount": {
+      "value": "99.90",
+      "currency": "EUR"
+    }
+  }
+}

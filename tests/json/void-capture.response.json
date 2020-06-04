@@ -1,0 +1,64 @@
+{
+    "payment": {
+      "statuses": {
+        "status": [
+          {
+            "code": "201.0000",
+            "description": "3d-acquirer:The resource was successfully created.",
+            "severity": "information"
+          }
+        ]
+      },
+      "card": {
+        "expiration-month": 1,
+        "expiration-year": 2023,
+        "card-type": "visa"
+      },
+      "merchant-account-id": {
+        "value": "cad16b4a-abf2-450d-bcb8-1725a4cef443",
+        "ref": "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+      },
+      "transaction-id": "481dc49a-78cc-4316-b6a9-65f513527be5",
+      "request-id": "e4cde12e-0bbf-4910-b860-883f2bc252f1",
+      "transaction-type": "void-capture",
+      "transaction-state": "success",
+      "completion-time-stamp": 1590669945000,
+      "requested-amount": {
+        "value": 30.9,
+        "currency": "EUR"
+      },
+      "parent-transaction-id": "c2855321-43af-469d-a907-44019e4020a1",
+      "account-holder": {
+        "first-name": "Jane",
+        "last-name": "Doe"
+      },
+      "card-token": {
+        "token-id": "4304509873471003",
+        "masked-account-number": "401200******1003"
+      },
+      "custom-fields": {
+        "custom-field": [
+          {
+            "field-name": "elastic-page-api.3d.original_txn_type",
+            "field-value": "authorization"
+          }
+        ]
+      },
+      "payment-methods": {
+        "payment-method": [
+          {
+            "name": "creditcard"
+          }
+        ]
+      },
+      "parent-transaction-amount": {
+        "value": 30.9,
+        "currency": "EUR"
+      },
+      "api-id": "elastic-api",
+      "cancel-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/cancel",
+      "fail-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/error",
+      "success-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/success",
+      "self": "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/481dc49a-78cc-4316-b6a9-65f513527be5"
+    }
+  }

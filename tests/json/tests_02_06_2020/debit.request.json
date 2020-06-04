@@ -1,0 +1,23 @@
+{
+  "payment": {
+    "merchant-account-id": {
+      "value": "8695f3e4-76e8-414b-96cd-a1e5dafcf20c"
+    },
+    "request-id": "7ea485fe-babe-4902-a1b0-37b0e9c39c75",
+    "transaction-type": "debit",
+    "requested-amount": {
+      "currency": "EUR",
+      "value": 99.9
+    },
+    "payment-methods": {
+      "payment-method": [
+        {
+          "name": "paypal"
+        }
+      ]
+    },
+    "success-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/success",
+    "fail-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/error",
+    "cancel-redirect-url": "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+  }
+}
