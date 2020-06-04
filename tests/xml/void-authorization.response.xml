@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/52d9064e-2b6b-4691-b081-11ab37d42501">
+  <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+  <transaction-id>52d9064e-2b6b-4691-b081-11ab37d42501</transaction-id>
+  <request-id>77d24ff4-2222-47a2-8734-32f32c910df3</request-id>
+  <transaction-type>void-authorization</transaction-type>
+  <transaction-state>success</transaction-state>
+  <completion-time-stamp>2020-06-01T18:40:55.000Z</completion-time-stamp>
+  <statuses>
+    <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+    <status code="200.1083" description="3d-acquirer:Cardholder Successfully authenticated." severity="information"/>
+  </statuses>
+  <requested-amount currency="EUR">999.90</requested-amount>
+  <parent-transaction-id>0e041530-942d-4325-9cf9-5104fb0a0fb9</parent-transaction-id>
+  <account-holder>
+    <first-name>Jane</first-name>
+    <last-name>Doe</last-name>
+  </account-holder>
+  <card>
+    <expiration-month>1</expiration-month>
+    <expiration-year>2023</expiration-year>
+    <card-type>visa</card-type>
+  </card>
+  <card-token>
+    <token-id>4304509873471003</token-id>
+    <masked-account-number>401200******1003</masked-account-number>
+  </card-token>
+  <custom-fields>
+    <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="authorization"/>
+  </custom-fields>
+  <payment-methods>
+    <payment-method name="creditcard"/>
+  </payment-methods>
+  <parent-transaction-amount currency="EUR">999.900000</parent-transaction-amount>
+  <authorization-code>587441</authorization-code>
+  <three-d>
+    <cardholder-authentication-status>Y</cardholder-authentication-status>
+  </three-d>
+  <api-id>elastic-api</api-id>
+  <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+  <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+  <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+  <provider-account-id>70003</provider-account-id>
+</payment>

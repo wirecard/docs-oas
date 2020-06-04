@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<payment xmlns="http://www.elastic-payments.com/schema/payment">
+  <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+  <request-id>00cefd17-cccc-4352-9160-db484025ce2b</request-id>
+  <transaction-type>refund-capture</transaction-type>
+  <parent-transaction-id>4a333393-4b25-4f2a-b6c2-57fbe0e1ba32</parent-transaction-id>
+  <requested-amount currency="EUR">8.0</requested-amount>
+</payment>

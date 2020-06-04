@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<payment xmlns="http://www.elastic-payments.com/schema/payment">
+  <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+  <request-id>c377af32-fb93-4d87-be48-7283ed6d7028</request-id>
+  <transaction-type>capture-authorization</transaction-type>
+  <parent-transaction-id>3af45b24-2a9b-48f5-b9ac-d8b56a09674f</parent-transaction-id>
+  <requested-amount currency="EUR">9.90</requested-amount>
+</payment>
