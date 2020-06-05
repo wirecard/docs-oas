@@ -1,0 +1,2491 @@
+openapi: 3.0.0
+info:
+  title: Wirecard Payment Gateway
+  version: "1.0.0"
+  description: |-
+    Wirecard's Payment Gateway enables an individually configurable, smooth, and secure checkout experience in your online shop.
+
+    The Payment Processing API conforms to the design principles of <b>Re</b>presentational <b>S</b>tate <b>T</b>ransfer (REST). Wirecard Payment Gateway provides access to resources (data entities) via URL paths. To use a REST API, your application can do an HTTP request and parse the response. You can find more details on how to integrate via REST API on <a href="https://doc.wirecard.com/RestApi.html">https://doc.wirecard.com/RestApi.html</a>
+
+    Below you can find typical REST API calls you can do on transactions in our payment gateway. Please keep in mind that a transaction can have different states and depending on the state only specific operations can be used. The diagram below gives you an overview of the most important operations and the order in which they can be used. For example, after a successful <i>authorization</i> only a <i>capture-authorization</i> or <i>void-authorization</i> is possible.
+
+    ```
+                      authorization                               purchase
+                            +                                         +
+                            +                                         +
+                            |                                         |
+                 +----------++----------+                      +------++------+
+                 |                      |                      |              |
+                 v                      v                      v              v
+        capture-authorization   void-authorization      refund-purchase  void-purchase
+                 +
+                 +
+                 |
+          +------++------+
+          |              |
+          v              v
+      void-capture  refund-capture
+    ```
+
+    <b>Use the following information for each request</b>
+
+    You have to authenticate via basic authentication to the server by using the following username and password for testing purposes:
+
+    <b>1) Debit via PayPal</b>
+
+    Username: <i>16390-testing</i>
+
+    Password: <i>3!3013=D3fD8X7</i>
+
+    and use following merchant account id: <i>8695f3e4-76e8-414b-96cd-a1e5dafcf20c</i>
+
+    <b>2) Other workflows</b>
+
+    Username: <i>70000-APILUHN-CARD</i>
+
+    Password: <i>8mhwavKVb91T</i>
+
+    and use following merchant account id: <i>cad16b4a-abf2-450d-bcb8-1725a4cef443</i>
+
+    Note that this combination of username, password and merchant account id (maid) will only work on <a href="https://api-test.wirecard.com">api-test.wirecard.com</a>
+
+    Please also keep in mind that the parameter request-id has to be a unique GUID for each valid request. You may want to create a random GUID e.g. via <a href="https://www.guidgenerator.com/">https://www.guidgenerator.com/</a>
+  termsOfService: "https://www.wirecard.com/legal-notice"
+  contact:
+    name: Wirecard AG
+    email: support@wirecard.com
+    url: "https://www.wirecard.com"
+servers:
+  - url: https://api-test.wirecard.com/engine/rest
+    description: Wirecard Payment Gateway
+paths:
+  /payments#capture-authorization:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'capture-authorization' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - capture-authorization
+      description: |
+        <b><i>Capture-authorization</i> with a credit card</b>
+
+        As a merchant, I want to get the money from a transaction transferred to my bank account.
+
+        The transaction-type <i>capture-authorization</i> transfers an authorized amount from the consumer's bank account to the merchant's bank account. When the consumer orders a product, the transaction-type <i>authorization</i> reserves the amount of money on the consumer's bank account. The <i>capture-authorization</i> transaction-type fulfills the actual transfer of the money. It captures either part of or the full authorized amount.
+
+        Notice: This process must be initiated in a defined period after a successful <i>authorization</i>. The period may vary between different acquirers.
+
+        <b>Steps to execute <i>capture-authorization</i> with a credit card</b>
+
+        Every <i>capture-authorization</i> comes after a successful <i>authorization</i>. First you need to create an <i>authorization</i>, to which you can refer to in the request. You can skip this if you already have an open, successful <i>authorization</i> transaction. You can capture either the full amount of the requested-amount from the authorization or capture a part of it. If you capture just a part of it, you can create more requests which refer to the same authorization and capture the rest of the amount.
+        <ol>
+          <li><b> Steps to get the values you need</b></li>
+          <ol type='a'>
+            <li>To get the values for the <i>capture-authorization</i>, you have to do the <i>authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+              <ol>
+              <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                <ul>
+                  <li>{hostname}:  api-test.wirecard.com</li>
+                  <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                  <li>{request-id}: Use the appropriate request id</li>
+                </ul>
+              </li>
+              <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+              <li>Look for the field requested amount – use it for the <i>requested-amount</i> in <b>step 2</b>.</li>
+             </ol>
+            </li>
+          </ol>
+          </li>
+          <li><b> Steps to create a <i>capture-authorization</i> with a credit card</b>
+            <ol type='a'>
+              <li>Create a POST request:
+                <ol>
+                  <li>Send an initial POST request with transaction-type <i>capture-authorization</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                  <li>Note that it is important that the <i>merchant-account-id</i> and the currency of the <i>requested-amount</i> are the same as in the <i>authorization</i> request.</li>
+                  </ol>
+              </li>
+              <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.</li>
+            </ol>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/capture-authorization-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/capture-authorization-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /payments#refund-capture:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'refund-capture' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - refund-capture
+      description: |
+        <b><i>Refund-capture</i> with a credit card</b>
+
+        As a merchant, I often have to cancel transactions and want to give consumers a partial or a full refund if they have already paid.
+
+        It is often the case that merchants must withdraw an online shopping process. When the consumer wants to buy a product or service online, Wirecard Payment Gateway initiates a payment process. When merchants withdraw this process, they can stop the process in two ways, either with a void or a refund.
+
+        A void is only possible as long as no money transfer has been initiated. As soon as Wirecard Payment Gateway has initiated the payment flow to the acquirer, the merchants must return the funds to the consumer via a refund process. A refund can happen after a successful <i>capture-authorization</i> or after a successful <i>purchase</i>.
+
+        <i>refund-capture</i>: A <i>refund-capture</i> request must reference a successful <i>capture-authorization</i> response.
+
+        The refund transaction contains a <i>parent-transaction-id</i> that refers to the <i>transaction-id</i> of the transaction that shall be refunded.
+
+        Step overview:
+        <ol>
+          <li>Consumer buys products/services on a merchant’s website.</li>
+          <li>Merchant refunds the transferred money if the funds transfer has been triggered.</li>
+        </ol>
+
+        <b>Steps to execute <i>refund-capture</i> with a credit card</b>
+
+        Every <i>refund-capture</i> comes after a successful <i>capture-authorization</i>. First you need to create an <i>authorization</i>, and after that you need to create a <i>capture-authorization</i>, to which you can refer to in the request.
+
+        <ol>
+          <li><b>Steps to get the values you need</b>
+            <ol type='a'>
+              <li>To get the values for the <i>capture-authorization</i>, you have to do the <i>authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step b</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}:  api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step b</b>.</li>
+                  <li>Look for the field requested amount – use it for the <i>requested-amount</i> in <b>step b</b>.</li>
+                </ol>
+              </li>
+              <li>To get the values for the <i>refund-capture</i>, you have to do the <i>capture-authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>capture-authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+                  <li>Look for the field requested amount – if you want to refund just a part of the original amount, use the desired value for the <i>requested-amount</i> field in <b>step 2</b>. If you want to refund the whole amount, you don't need to use the <i>requested-amount</i> field.</li>
+               </ol>
+              </li>
+            </ol>
+          </li>
+          <li><b>Steps to create a <i>refund-capture</i> with a credit card</b>
+            <ol type='a'>
+              <li>
+              Create a POST request:
+                <ol>
+                  <li>Send an initial POST request with transaction-type <i>refund-capture</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                </ol>
+              </li>
+              <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.</li>
+            </ol>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/refund-capture-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/refund-capture-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /payments#refund-purchase:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'refund-purchase' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - refund-purchase
+      description: |
+        <b><i>Refund-purchase</i> with a credit card</b>
+
+        As a merchant, I often have to cancel transactions and want to give consumers a partial or a full refund if they have already paid.
+
+        It is often the case that merchants must withdraw an online shopping process. When the consumer wants to buy a product or service online, Wirecard Payment Gateway initiates a payment process. When merchants withdraw this process, they can stop the process in two ways, either with a void or a refund.
+
+        A void is only possible as long as no money transfer has been initiated. As soon as Wirecard Payment Gateway has initiated the payment flow to the acquirer, the merchants must return the funds to the consumer via a refund process. A refund can happen after a successful <i>capture-authorization</i> or after a successful <i>purchase</i>.
+
+        <i>refund-purchase</i>: A <i>refund-purchase</i> request must reference a successful <i>purchase</i> response.
+
+        The refund transaction contains a <i>parent-transaction-id</i> that refers to the <i>transaction-id</i> of the transaction that shall be refunded.
+
+        Step overview:
+        <ol>
+          <li>Consumer buys products/services on a merchant’s website.</li>
+          <li>Merchant refunds the transferred money if the funds transfer has been triggered.</li>
+        </ol>
+
+        <b>Steps to execute <i>refund-purchase</i> with a credit card</b>
+
+        Every <i>refund-purchase</i> comes after a successful <i>purchase</i>. First you need to create a <i>purchase</i>, to which you can refer to in the request.
+
+        <ol>
+          <li><b>Steps to get the values you need</b>
+            <ol type='a'>
+              <li>To get the values for the <i>refund-purchase</i>, you have to do the <i>purchase</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>purchase</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+                  <li>Look for the field requested amount – if you want to refund just a part of the original amount, use the desired value for the <i>requested-amount</i> field in <b>step 2</b>. If you want to refund the whole amount, you don't need to use the <i>requested-amount</i> field.</li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li><b>Steps to create a <i>refund-purchase</i> with a credit card</b>
+            <ol type='a'>
+              <li>Create a POST request:
+                <ol>
+                  <li>Send an initial POST request with transaction-type <i>refund-purchase</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                </ol>
+              </li>
+              <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.</li>
+            </ol>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/refund-purchase-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/refund-purchase-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /payments#void-authorization:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'void-authorization' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - void-authorization
+      description: |
+        <b><i>Void-authorization</i> with a credit card</b>
+
+        As a merchant, I want to be able to cancel transactions while the consumer hasn’t paid yet.
+
+        It is often the case that merchants must withdraw an online shopping process. When the consumer wants to buy a product or service online, Wirecard Payment Gateway initiates a payment process. When merchants withdraw this process, they can stop the process in two ways, either with a void or a refund.
+
+        A void is only possible as long as no money transfer has been initiated. As soon as Wirecard Payment Gateway has initiated the payment flow to the acquirer, the merchants must return the funds to the consumer via a refund process.
+
+        <i>void-authorization</i>: A <i>void-authorization</i> request must reference a successful <i>authorization</i> response.
+
+        The void transaction contains a <i>parent-transaction-id</i> that refers to the <i>transaction-id</i> of the transaction that shall be voided.
+
+        Step overview:
+        <ol>
+          <li>Consumer buys products/services on a merchant’s website.</li>
+          <li>Merchant voids the transaction if the funds transfer has not been triggered yet.</li>
+        </ol>
+
+        <b>Steps to execute <i>void-authorization</i> with a credit card</b>
+
+        Every <i>void-authorization</i> comes after a successful <i>authorization</i>. First you need to create an <i>authorization</i>, to which you can refer to in the request.
+
+        <ol>
+          <li><b>Steps to get the values you need</b>
+            <ol type='a'>
+              <li>To get the values for the <i>void-authorization</i>, you have to do the <i>authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+                </ol>
+              </li>
+            </ol>
+            <li><b>Steps to create a <i>void-authorization</i> with a credit card</b>
+              <ol type='a'>
+                <li>Create a POST request:
+                  <ol>
+                    <li>Send an initial POST request with transaction-type <i>void-authorization</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                  </ol>
+                </li>
+                <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.
+                </li>
+              </ol>
+            </li>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/void-authorization-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/void-authorization-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /payments#void-capture:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'void-capture' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - void-capture
+      description: |
+        <b><i>Void-capture</i> with a credit card</b>
+
+        As a merchant, I want to be able to cancel transactions while the consumer hasn’t paid yet.
+
+        It is often the case that merchants must withdraw an online shopping process. When the consumer wants to buy a product or service online, Wirecard Payment Gateway initiates a payment process. When merchants withdraw this process, they can stop the process in two ways, either with a void or a refund.
+
+        A void is only possible as long as no money transfer has been initiated. As soon as Wirecard Payment Gateway has initiated the payment flow to the acquirer, the merchants must return the funds to the consumer via a refund process.
+
+        <i>void-capture</i>: A <i>void-capture</i> request must reference a successful <i>capture-authorization</i> response.
+
+        The void transaction contains a <i>parent-transaction-id</i> that refers to the <i>transaction-id</i> of the transaction that shall be voided.
+
+        Step overview:
+        <ol>
+          <li>Consumer buys products/services on a merchant’s website.</li>
+          <li>Merchant voids the transaction if the funds transfer has not been triggered yet.</li>
+        </ol>
+
+        <b>Steps to execute <i>void-capture</i> with a credit card</b>
+
+        Every <i>void-capture</i> comes after a successful <i>capture-authorization</i>. First you need to create an <i>authorization</i>, and after that you need to create a <i>capture-authorization</i>, to which you can refer to in the request.
+
+        <ol>
+          <li><b>Steps to get the values you need</b>
+            <ol type='a'>
+              <li>To get the values for the <i>capture-authorization</i>, you have to do the <i>authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step b</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step b</b>.</li>
+                  <li>Look for the field requested amount – use it for the <i>requested-amount</i> in <b>step b</b>.</li>
+                </ol>
+              </li>
+              <li>
+                To get the values for the <i>void-capture</i>, you have to do the <i>capture-authorization</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>capture-authorization</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li><b>Steps to create a <i>void-capture</i> with a credit card</b>
+            <ol type='a'>
+              <li>Create a POST request:
+                <ol>
+                  <li>Send an initial POST request with transaction-type <i>void-capture</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                </ol>
+              </li>
+              <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.
+              </li>
+            </ol>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/void-capture-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/void-capture-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /payments#void-purchase:
+    post:
+      summary: An operation is carried out directly for the transaction-type 'void-purchase' and returns a success status if successful. Otherwise an error and an error description is returned.
+      tags:
+        - void-purchase
+      description: |
+        <b><i>Void-purchase</i> with a credit card</b>
+
+        As a merchant, I want to be able to cancel transactions while the consumer hasn’t paid yet.
+
+        It is often the case that merchants must withdraw an online shopping process. When the consumer wants to buy a product or service online, Wirecard Payment Gateway initiates a payment process. When merchants withdraw this process, they can stop the process in two ways, either with a void or a refund.
+
+        A void is only possible as long as no money transfer has been initiated. As soon as Wirecard Payment Gateway has initiated the payment flow to the acquirer, the merchants must return the funds to the consumer via a refund process.
+
+        <i>void-purchase</i>: A <i>void-purchase</i> request must reference a successful <i>purchase</i> response.
+
+        The void transaction contains a <i>parent-transaction-id</i> that refers to the <i>transaction-id</i> of the transaction that shall be voided.
+
+        Step overview:
+        <ol>
+          <li>Consumer buys products/services on a merchant’s website.</li>
+          <li>Merchant voids the transaction if the funds transfer has not been triggered yet.</li>
+        </ol>
+
+        <b>Steps to execute <i>void-purchase</i> with a credit card</b>
+
+        Every <i>void-purchase</i> comes after a successful <i>purchase</i>. First you need to create a <i>purchase</i>, to which you can refer to in the request.
+
+        <ol>
+          <li><b>Steps to get the values you need</b>
+            <ol type='a'>
+              <li>To get the values for the <i>void-purchase</i>, you have to do the <i>purchase</i> workflow. After the workflow is completed, you can take a look at the transaction in the browser. There you can find the <i>transaction-id</i> from the <i>purchase</i>. This will be the <i>parent-transaction-id</i> in <b>step 2</b>.
+                <ol>
+                  <li>Look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+                    <ul>
+                      <li>{hostname}: api-test.wirecard.com</li>
+                      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+                      <li>{request-id}: Use the appropriate request id</li>
+                    </ul>
+                  </li>
+                  <li>Look for the field transaction id – this will be the <i>parent-transaction-id</i> in <b>step 2</b>.</li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li><b>Steps to create a <i>void-purchase</i> with a credit card</b>
+            <ol type='a'>
+              <li>Create a POST request:
+                <ol>
+                  <li>Send an initial POST request with transaction-type <i>void-purchase</i> to the Wirecard Payment Gateway. The response body contains the data you sent plus additional status information and the corresponding timestamp. This POST request is secured by basic authentication.</li>
+                </ol>
+              </li>
+              <li>If the initial POST request is faulty, the Wirecard Payment Gateway returns an error code with a description of the problem in the response. Return to <b>step a</b>. If it is correct, the transaction is completed.</li>
+            </ol>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/void-purchase-request"
+      responses:
+        "201":
+          $ref: "#/components/responses/void-purchase-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+  /paymentmethods#debit:
+    post:
+      summary: Creates a payment session for transaction-type 'debit' and payment method 'paypal' and returns a redirect URL if successful. Otherwise an error and an error description is returned.
+      tags:
+        - debit
+      description: |
+        <b><i>Debit</i> with PayPal</b>
+
+        As a merchant, I want my consumers to be able to immediately pay via PayPal.
+
+        The transaction-type <i>debit</i> transfers an authorized amount from the consumer's PayPal account to the merchant's account.
+
+        The consumer has three hours to finish his payment because the redirect URL expires after three hours. A query for an uncompleted transaction that has exceeded this period will return a failed transaction.
+
+        <ol>
+          <li>The consumer initiates payment.</li>
+          <li>Merchant sends a debit request to Wirecard Payment Gateway.</li>
+          <li>Wirecard Payment Gateway sends a response to the merchant containing the redirect URL to PayPal.</li>
+          <li>Merchant takes the URL from the response.</li>
+          <li>Merchant redirects consumers to this URL (URL can be found in parameter <b><payment-method url="URL" name="paypal"/></b>).</li>
+          <li>Consumer confirms payment on PayPal site.</li>
+          <li>Wirecard Payment Gateway redirects consumers back to the merchant’s system URL based on payment result (<b>success-redirect-url</b>, <b>cancel-redirect-url</b>, <b>fail-redirect-url</b> ← defined in MAID configuration or the first request).</li>
+          <li>Wirecard Payment Gateway sends an Instant Payment Notification (IPN) to the merchant’s system after the payment is verified (usually a few seconds).</li>
+        </ol>
+
+        <b>Steps to create <i>debit</i> with PayPal</b>
+
+        <ol>
+          <li><b>Create a payment session</b>
+            <ol type='a'>
+              <li>Send an initial POST request with transaction-type <i>debit</i> and the payment-method <i>paypal</i> to the Wirecard Payment Gateway. This POST request is secured by basic authentication. The response body contains the data you sent plus additional status information and the corresponding timestamp.</li>
+            </ol>
+          </li>
+          <li><b>Redirect the consumer to the payment page (initial response URL)</b>
+            <ol type='a'>
+              <li>For this example: Click ‘Try it out’ and then ‘Execute’ to execute the POST request in <b>step 1</b>.</li>
+              <li>If the POST request is correct, you receive an initial response URL. Use it to redirect your consumer to the payment page (for this example, copy the URL and open it). After that, the consumer can fill out the required fields on the payment page and submit the payment (for this example, input the following test credentials and submit the payment: <a href="https://doc.wirecard.com/PayPal_Main.html#PayPal_TestCredentials">https://doc.wirecard.com/PayPal_Main.html#PayPal_TestCredentials</a>)</li>
+              <li>If the POST request is incorrect, an error code is returned in the response. It contains a description of the problem. Return to <b>step 1</b> and create a new payment session with the right details.</li>
+            </ol>
+          </li>
+          <li><b>Parse and process the payment response</b>
+            <ol type='a'>
+              <li>There are three different possible results for the transaction-state after the payment is processed (<i>successful</i>, <i>failed</i>, and <i>canceled</i>). You can redirect the consumer to different pages for each state. In any case (unless the customer cancels the transaction on a 3rd party provider page), a base64 encoded response containing payment information is sent to the configured redirection URL.</li>
+              <li>Now, the payment process is complete.</li>
+            </ol>
+          </li>
+        </ol>
+
+        <b>Use the following test credentials to log in PayPal</b>
+
+        Email: <i>paypal.buyer2@wirecard.com</i>
+
+        Password: <i>Wirecardbuyer</i>
+
+        You can find more details about PayPal at <a href="https://doc.wirecard.com/PayPal_Main.html#API_PaymentMethods_PayPal">https://doc.wirecard.com/PayPal_Main.html#API_PaymentMethods_PayPal</a>
+      requestBody:
+        $ref: "#/components/requestBodies/debit-request"
+      responses:
+        "202":
+          $ref: "#/components/responses/debit-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+        "403":
+          $ref: "#/components/responses/error-response"
+components:
+  requestBodies:
+    capture-authorization-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/capture-authorization-request-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/capture-authorization-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <request-id>c377af32-fb93-4d87-be48-7283ed6d7028</request-id>
+                <transaction-type>capture-authorization</transaction-type>
+                <parent-transaction-id>3af45b24-2a9b-48f5-b9ac-d8b56a09674f</parent-transaction-id>
+                <requested-amount currency="EUR">99.90</requested-amount>
+              </payment>
+    refund-capture-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/refund-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "00cefd17-b127-4352-9160-db484025ce2b"
+              transaction-type: "refund-capture"
+              parent-transaction-id: "e2700e7e-3869-4c73-9439-cf2719e59a34"
+              requested-amount:
+                value: "99.90"
+                currency: "EUR"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/refund-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+                <request-id>00cefd17-cccc-4352-9160-db484025ce2b</request-id>
+                <transaction-type>refund-capture</transaction-type>
+                <parent-transaction-id>4a333393-4b25-4f2a-b6c2-57fbe0e1ba32</parent-transaction-id>
+                <requested-amount currency="EUR">99.0</requested-amount>
+              </payment>
+    refund-purchase-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/refund-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "41820099-cb25-4799-8e48-afdabb1f4222"
+              transaction-type: "refund-purchase"
+              parent-transaction-id: "6de49881-63a3-4f05-a4c0-227c5b0b3781"
+              requested-amount:
+                value: "99.90"
+                currency: "EUR"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/refund-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+                <request-id>41820099-ddd-4799-8e48-afdabb1f4222</request-id>
+                <transaction-type>refund-purchase</transaction-type>
+                <parent-transaction-id>f5a0e5f7-3d11-4048-b1cc-16b70f47b705</parent-transaction-id>
+                <requested-amount currency="EUR">99.90</requested-amount>
+              </payment>
+    void-authorization-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "77d24ff4-5547-47a2-8734-32f32c910df3"
+              transaction-type: "void-authorization"
+              parent-transaction-id: "b5d7385a-3773-4b09-b613-b955a5a10288"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+                <request-id>77d24ff4-2222-47a2-8734-32f32c910df3</request-id>
+                <transaction-type>void-authorization</transaction-type>
+                <parent-transaction-id>0e041530-942d-4325-9cf9-5104fb0a0fb9</parent-transaction-id>
+              </payment>
+    void-capture-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "b6c7f1df-76c3-496f-a4f1-63ccb6b9bcb2"
+              transaction-type: "void-capture"
+              parent-transaction-id: "e2700e7e-3869-4c73-9439-cf2719e59a34"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+                <request-id>b6c7f1df-5454-496f-a4f1-63ccb6b9bcb2</request-id>
+                <transaction-type>void-capture</transaction-type>
+                <parent-transaction-id>e8f15343-7f6e-4048-a65a-890a767c3cd7</parent-transaction-id>
+              </payment>
+    void-purchase-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "21ace5da-ac72-4bb4-bffb-32c9e2462491"
+              transaction-type: "void-purchase"
+              parent-transaction-id: "6de49881-63a3-4f05-a4c0-227c5b0b3781"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
+                <request-id>21ace5da-ac72-4bb4-bffb-32c9e2462491</request-id>
+                <transaction-type>void-purchase</transaction-type>
+                <parent-transaction-id>b6217fbe-7a23-4ad6-844b-25cdb7eed0bd</parent-transaction-id>
+              </payment>
+    debit-request:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/debit-request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "8695f3e4-76e8-414b-96cd-a1e5dafcf20c"
+              request-id: "7ea485fe-3b05-4902-a1b0-37b0e9c39c75"
+              transaction-type: "debit"
+              requested-amount:
+                value: "99.90"
+                currency: "EUR"
+              success-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/success"
+              fail-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/error"
+              cancel-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/debit-request-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>8695f3e4-76e8-414b-96cd-a1e5dafcf20c</merchant-account-id>
+                <request-id>7ea485fe-5858-4902-a1b0-37b0e9c39c75</request-id>
+                <transaction-type>debit</transaction-type>
+                <payment-methods>
+                  <payment-method name="paypal" />
+                </payment-methods>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+              </payment>
+  responses:
+    capture-authorization-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/capture-authorization-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/capture-authorization-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/4a333393-4b25-4f2a-b6c2-57fbe0e1ba32">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>4a333393-4b25-4f2a-b6c2-57fbe0e1ba32</transaction-id>
+                <request-id>c377af32-fb93-4d87-be48-ffffff</request-id>
+                <transaction-type>capture-authorization</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T16:04:51.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                  <status code="200.1083" description="3d-acquirer:Cardholder Successfully authenticated." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>3af45b24-2a9b-48f5-b9ac-d8b56a09674f</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="authorization"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>646839</authorization-code>
+                <three-d>
+                  <cardholder-authentication-status>Y</cardholder-authentication-status>
+                </three-d>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    refund-capture-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/refund-capture-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/refund-capture-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/80fc958f-2669-4822-af11-7d877fee2609">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>80fc958f-2669-4822-af11-7d877fee2609</transaction-id>
+                <request-id>00cefd17-cccc-4352-9160-db484025ce2b</request-id>
+                <transaction-type>refund-capture</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T16:14:52.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>4a333393-4b25-4f2a-b6c2-57fbe0e1ba32</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="authorization"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>590875</authorization-code>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    refund-purchase-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/refund-purchase-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/refund-purchase-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/9bfd9845-3e50-49fd-81c7-a6c7ba1bf39b">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>9bfd9845-3e50-49fd-81c7-a6c7ba1bf39b</transaction-id>
+                <request-id>41820099-ddd-4799-8e48-afdabb1f4222</request-id>
+                <transaction-type>refund-purchase</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T16:35:37.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>f5a0e5f7-3d11-4048-b1cc-16b70f47b705</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="purchase"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>470074</authorization-code>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    void-authorization-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-authorization-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-authorization-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/52d9064e-2b6b-4691-b081-11ab37d42501">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>52d9064e-2b6b-4691-b081-11ab37d42501</transaction-id>
+                <request-id>77d24ff4-2222-47a2-8734-32f32c910df3</request-id>
+                <transaction-type>void-authorization</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T18:40:55.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                  <status code="200.1083" description="3d-acquirer:Cardholder Successfully authenticated." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>0e041530-942d-4325-9cf9-5104fb0a0fb9</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="authorization"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>587441</authorization-code>
+                <three-d>
+                  <cardholder-authentication-status>Y</cardholder-authentication-status>
+                </three-d>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    void-capture-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-capture-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-capture-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/155c9d03-b62f-42ad-bb0b-ba8c929d684e">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>155c9d03-b62f-42ad-bb0b-ba8c929d684e</transaction-id>
+                <request-id>b6c7f1df-5454-496f-a4f1-63ccb6b9bcb2</request-id>
+                <transaction-type>void-capture</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T18:48:59.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                  <status code="200.1083" description="3d-acquirer:Cardholder Successfully authenticated." severity="information"/>
+                </statuses>
+                <csc-code>P</csc-code>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>e8f15343-7f6e-4048-a65a-890a767c3cd7</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="authorization"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>721346</authorization-code>
+                <three-d>
+                  <cardholder-authentication-status>Y</cardholder-authentication-status>
+                </three-d>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    void-purchase-response:
+      description: The resource was successfully created or a bad request has occurred. If the resource was successfully created, the <transaction-state> is <i>success</i>. If a bad request has occurred, the <transaction-state> is <i>failed</i>. You can find a more detailed description of the response in the description of the status code.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/void-purchase-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/void-purchase-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment" self="https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/2d40894b-b8a7-485c-a61d-4f6326febaab">
+                <merchant-account-id ref="https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443">cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id>
+                <transaction-id>2d40894b-b8a7-485c-a61d-4f6326febaab</transaction-id>
+                <request-id>21ace5da-9915-4bb4-bffb-32c9e2462491</request-id>
+                <transaction-type>void-purchase</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T19:06:42.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="3d-acquirer:The resource was successfully created." severity="information"/>
+                  <status code="200.1083" description="3d-acquirer:Cardholder Successfully authenticated." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <parent-transaction-id>b6217fbe-7a23-4ad6-844b-25cdb7eed0bd</parent-transaction-id>
+                <account-holder>
+                  <first-name>Jane</first-name>
+                  <last-name>Doe</last-name>
+                </account-holder>
+                <card>
+                  <expiration-month>1</expiration-month>
+                  <expiration-year>2023</expiration-year>
+                  <card-type>visa</card-type>
+                </card>
+                <card-token>
+                  <token-id>4304509873471003</token-id>
+                  <masked-account-number>401200******1003</masked-account-number>
+                </card-token>
+                <custom-fields>
+                  <custom-field field-name="elastic-page-api.3d.original_txn_type" field-value="purchase"/>
+                </custom-fields>
+                <payment-methods>
+                  <payment-method name="creditcard"/>
+                </payment-methods>
+                <parent-transaction-amount currency="EUR">99.900000</parent-transaction-amount>
+                <authorization-code>380834</authorization-code>
+                <three-d>
+                  <cardholder-authentication-status>Y</cardholder-authentication-status>
+                </three-d>
+                <api-id>elastic-api</api-id>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+                <provider-account-id>70003</provider-account-id>
+              </payment>
+    debit-response:
+      description: Response body </br> A redirect URL to be used for redirecting your consumer to Wirecard Payment Gateway for submitting a payment. If the credentials are valid, the consumer is redirected to a success redirect URL. Otherwise, the consumer is redirected to a fail or cancel redirect URL.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/debit-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/debit-response-schema"
+          example: >
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <payment xmlns="http://www.elastic-payments.com/schema/payment">
+                <merchant-account-id>8695f3e4-76e8-414b-96cd-a1e5dafcf20c</merchant-account-id>
+                <transaction-id>4104beaa-1248-464d-b70f-09e0afd31e5b</transaction-id>
+                <request-id>7ea485fe-5858-4902-a1b0-37b0e9c39c75</request-id>
+                <transaction-type>debit</transaction-type>
+                <transaction-state>success</transaction-state>
+                <completion-time-stamp>2020-06-01T20:06:28.000Z</completion-time-stamp>
+                <statuses>
+                  <status code="201.0000" description="The resource was successfully created." severity="information"/>
+                </statuses>
+                <requested-amount currency="EUR">99.90</requested-amount>
+                <payment-methods>
+                  <payment-method url="https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&amp;useraction=commit&amp;token=EC-56745091MV679932N" name="paypal"/>
+                </payment-methods>
+                <cancel-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/cancel</cancel-redirect-url>
+                <fail-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/error</fail-redirect-url>
+                <success-redirect-url>https://demoshop-test.wirecard.com/demoshop/#/success</success-redirect-url>
+              </payment>
+    unauthorized-response:
+      description: Unauthorized response
+      content:
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/unauthorized-response-schema"
+    error-response:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment:
+                $ref: "#/components/schemas/error-response-schema"
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/error-response-schema"
+  schemas:
+    capture-authorization-request-schema:
+      title: Capture-Authorization request
+      type: object
+      properties:
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+        request-id:
+          type: string
+          example: "c377af32-fb93-4d87-be48-7283ed6d7028"
+        transaction-type:
+          type: string
+          example: "capture-authorization"
+        parent-transaction-id:
+          type: string
+          example: "ec94742d-47f3-407a-ab9f-693dc5677830"
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not be done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+      required:
+        - merchant-account-id
+        - request-id
+        - transaction-type
+        - parent-transaction-id
+      xml:
+        name: payment
+        namespace: "http://www.elastic-payments.com/schema/payment"
+    capture-authorization-response-schema:
+      title: Capture-Authorization response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+                - code: "200.1083"
+                  description: "3d-acquirer:Cardholder Successfully authenticated."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "09129c43-387a-46a0-a6f7-4feda953e86b"
+        request-id:
+          type: string
+          example: "fba99b93-5dda-42cc-9d77-ebafd7db6378"
+        transaction-type:
+          type: string
+          example: "capture-authorization"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590669506000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "3226d1ab-cc23-46dd-abdf-c16a1562a03a"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "authorization"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "923872"
+        three-d:
+          type: object
+          properties:
+            cardholder-authentication-status:
+              type: string
+              example: "Y"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/09129c43-387a-46a0-a6f7-4feda953e86b"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    refund-request-schema:
+      title: Refund request
+      type: object
+      properties:
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+        request-id:
+          type: string
+          example: "00254cf0-3692-4d0c-bb15-cffc828c0ad2"
+        transaction-type:
+          type: string
+          example: "refund-capture"
+        parent-transaction-id:
+          type: string
+          example: "c2855321-43af-469d-a907-44019e4020a1"
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not be done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+      required:
+        - merchant-account-id
+        - request-id
+        - transaction-type
+        - parent-transaction-id
+      xml:
+        name: payment
+        namespace: "http://www.elastic-payments.com/schema/payment"
+    refund-capture-response-schema:
+      title: Refund-capture response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "042d615f-eebc-402c-9f6a-ea8f6c019403"
+        request-id:
+          type: string
+          example: "00254cf0-3692-4d0c-bb15-cffc828c0ad2"
+        transaction-type:
+          type: string
+          example: "refund-capture"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590669759000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "c2855321-43af-469d-a907-44019e4020a1"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "authorization"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "057095"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/042d615f-eebc-402c-9f6a-ea8f6c019403"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    refund-purchase-response-schema:
+      title: Refund-purchase response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "738a1e84-1ab9-487c-ae28-dcfc8d767863"
+        request-id:
+          type: string
+          example: "2a51c31a-0951-4df5-bfa2-0a501defde87"
+        transaction-type:
+          type: string
+          example: "refund-purchase"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590670757000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "1f596808-4f79-4dd0-90e7-35f11336dc84"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "purchase"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "166137"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/738a1e84-1ab9-487c-ae28-dcfc8d767863"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    void-request-schema:
+      title: Void request
+      type: object
+      properties:
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+        request-id:
+          type: string
+          example: "415e3988-c8dd-4b3c-96f4-27cd9c70a9ff"
+        transaction-type:
+          type: string
+          example: "void-authorization"
+        parent-transaction-id:
+          type: string
+          example: "84298e53-2a34-4492-b9e0-2efed81a4ea4"
+      required:
+        - merchant-account-id
+        - request-id
+        - transaction-type
+        - parent-transaction-id
+      xml:
+        name: payment
+        namespace: "http://www.elastic-payments.com/schema/payment"
+    void-authorization-response-schema:
+      title: Void-authorization response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+                - code: "200.1083"
+                  description: "3d-acquirer:Cardholder Successfully authenticated."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "5f9f3fd4-edea-4510-8552-a8b79504929f"
+        request-id:
+          type: string
+          example: "415e3988-c8dd-4b3c-96f4-27cd9c70a9ff"
+        transaction-type:
+          type: string
+          example: "void-authorization"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590670383000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "84298e53-2a34-4492-b9e0-2efed81a4ea4"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "authorization"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "328845"
+        three-d:
+          type: object
+          properties:
+            cardholder-authentication-status:
+              type: string
+              example: "Y"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/5f9f3fd4-edea-4510-8552-a8b79504929f"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    void-capture-response-schema:
+      title: Void-capture response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+                - code: "200.1083"
+                  description: "3d-acquirer:Cardholder Successfully authenticated."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "481dc49a-78cc-4316-b6a9-65f513527be5"
+        request-id:
+          type: string
+          example: "e4cde12e-0bbf-4910-b860-883f2bc252f1"
+        transaction-type:
+          type: string
+          example: "void-capture"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590669945000
+        csc-code:
+          type: string
+          example: "P"
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "c2855321-43af-469d-a907-44019e4020a1"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "authorization"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "295104"
+        three-d:
+          type: object
+          properties:
+            cardholder-authentication-status:
+              type: string
+              example: "Y"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/481dc49a-78cc-4316-b6a9-65f513527be5"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    void-purchase-response-schema:
+      title: Void-purchase response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+                - code: "200.1083"
+                  description: "3d-acquirer:Cardholder Successfully authenticated."
+                  severity: "information"
+        card:
+          type: object
+          properties:
+            expiration-month:
+              type: number
+              example: 1
+            expiration-year:
+              type: number
+              example: 2023
+            card-type:
+              type: string
+              example: "visa"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+            ref:
+              type: string
+              example: "https://api-test.wirecard.com:443/engine/rest/config/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              xml:
+                attribute: true
+        transaction-id:
+          type: string
+          example: "7012dda5-ceac-43fe-bf9c-b7b50c9a14cc"
+        request-id:
+          type: string
+          example: "b5046e4e-b9cb-46f4-9e66-3b0d2a19b9cd"
+        transaction-type:
+          type: string
+          example: "void-purchase"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590670949000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        parent-transaction-id:
+          type: string
+          example: "4a9be87f-4fc0-45b5-a4bf-053935162c3d"
+        account-holder:
+          type: object
+          properties:
+            first-name:
+              type: string
+              example: "Jane"
+            last-name:
+              type: string
+              example: "Doe"
+        card-token:
+          type: object
+          properties:
+            token-id:
+              type: string
+              example: "4242796444090018"
+            masked-account-number:
+              type: string
+              example: "420000******0018"
+        custom-fields:
+          type: object
+          properties:
+            custom-field:
+              type: array
+              items:
+                type: object
+                properties:
+                  field-name:
+                    type: string
+                    example: "elastic-page-api.3d.original_txn_type"
+                  field-value:
+                    type: string
+                    example: "purchase"
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "creditcard"
+                    xml:
+                      attribute: true
+        parent-transaction-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        authorization-code:
+          type: string
+          example: "657723"
+        three-d:
+          type: object
+          properties:
+            cardholder-authentication-status:
+              type: string
+              example: "Y"
+        api-id:
+          type: string
+          example: "elastic-api"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        provider-account-id:
+          type: string
+          example: "70003"
+        self:
+          type: string
+          example: "https://api-test.wirecard.com:443/engine/rest/merchants/cad16b4a-abf2-450d-bcb8-1725a4cef443/payments/7012dda5-ceac-43fe-bf9c-b7b50c9a14cc"
+          xml:
+            attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    debit-request-schema:
+      title: Debit request
+      type: object
+      properties:
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "8695f3e4-76e8-414b-96cd-a1e5dafcf20c"
+        request-id:
+          type: string
+          example: "7ea485fe-3b05-4902-a1b0-37b0e9c39c75"
+        transaction-type:
+          type: string
+          example: "debit"
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not be done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "paypal"
+                    xml:
+                      attribute: true
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+      required:
+        - merchant-account-id
+        - request-id
+        - transaction-type
+        - requested-amount
+        - success-redirect-url
+        - fail-redirect-url
+        - cancel-redirect-url
+      xml:
+        name: payment
+        namespace: "http://www.elastic-payments.com/schema/payment"
+    debit-response-schema:
+      title: Debit response
+      type: object
+      properties:
+        statuses:
+          type: object
+          properties:
+            status:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    xml:
+                      attribute: true
+                  description:
+                    type: string
+                    xml:
+                      attribute: true
+                  severity:
+                    type: string
+                    xml:
+                      attribute: true
+              example:
+                - code: "201.0000"
+                  description: "3d-acquirer:The resource was successfully created."
+                  severity: "information"
+        merchant-account-id:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: string
+              example: "8695f3e4-76e8-414b-96cd-a1e5dafcf20c"
+        transaction-id:
+          type: string
+          example: "4ec37486-ce15-46df-8ebd-55ba675f6901"
+        request-id:
+          type: string
+          example: "c669a645-fe36-4c76-8eb7-1b79db837738"
+        transaction-type:
+          type: string
+          example: "debit"
+        transaction-state:
+          type: string
+          example: "success"
+        completion-time-stamp:
+          type: number
+          example: 1590674365000
+        requested-amount:
+          type: object
+          properties:
+            value:
+              # this could not done for xml see the bug: https://github.com/OAI/OpenAPI-Specification/issues/630
+              type: number
+              example: 99.90
+            currency:
+              type: string
+              example: "EUR"
+              xml:
+                attribute: true
+        payment-methods:
+          type: object
+          properties:
+            payment-method:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&useraction=commit&token=EC-79W67772K8377163Y"
+                    xml:
+                      attribute: true
+                  name:
+                    type: string
+                    example: "paypal"
+                    xml:
+                      attribute: true
+        cancel-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+        fail-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+        success-redirect-url:
+          type: string
+          example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+        # xmlns:ns2="http://www.elastic-payments.com/schema/epa/transaction"
+        # second namespace no supported by swaggerui: https://github.com/OAI/OpenAPI-Specification/issues/1456
+    unauthorized-response-schema:
+      title: Unauthorized response
+      type: object
+      properties:
+        head:
+          type: object
+        title:
+          type: string
+          example: 401 Unauthorized
+        body:
+          type: object
+          properties:
+            h1:
+              type: string
+              example: Unauthorized
+      xml:
+        name: html
+    error-response-schema:
+      title: Error response
+      type: object
+      properties:
+        transaction-state:
+          type: string
+          example: "failed"
+        statuses:
+          type: object
+          properties:
+            status:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: "403.1166"
+                  xml:
+                    attribute: true
+                description:
+                  type: string
+                  example: Access Denied - User doesn‘t have the access for the requested operation!
+                  xml:
+                    attribute: true
+                severity:
+                  type: string
+                  example: "error"
+                  xml:
+                    attribute: true
+      xml:
+        name: "payment"
+        namespace: "http://www.elastic-payments.com/schema/payment"
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+security:
+  - basicAuth: []
+externalDocs:
+  description: "Wirecard Payment Gateway: Online Documentation: Integration Guide"
+  url: https://doc.wirecard.com
