@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<payment xmlns="http://www.elastic-payments.com/schema/payment">
-  <merchant-account-id>cad16b4a-abf2-450d-bcb8-1725a4cef443</merchant-account-id> 
-  <request-id>b6c7f1df-5454-496f-a4f1-63ccb6b9bcb2</request-id>
-  <transaction-type>void-capture</transaction-type>
-  <parent-transaction-id>e8f15343-7f6e-4048-a65a-890a767c3cd7</parent-transaction-id>
-</payment>
