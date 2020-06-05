@@ -1,0 +1,342 @@
+openapi: 3.0.0
+info:
+  title: Wirecard Payment Page v2 (WPP v2)
+  version: "1.0.0"
+  description: |-
+    <b>Create the perfect payment page for your online shop and use our simple checkout solution for your customers.</b>
+
+    Wirecard’s Payment Page enables an individual, smooth and secure experience in your online shop.
+
+    <b>Use the following information for each request</b>
+
+    You have to authenticate via basic authentication to the server by using the following username and password for testing purposes:
+
+    Username: <i>70000-APILUHN-CARD</i>
+
+    Password: <i>8mhwavKVb91T</i>
+
+    and use following merchant account id: <i>cad16b4a-abf2-450d-bcb8-1725a4cef443</i>
+
+    Note that this combination of username, password and merchant account id (maid) will only work on [wpp-test.wirecard.com](https://wpp-test.wirecard.com)
+
+    Please also keep in mind that the parameter request-id has to be a unique GUID for each valid request. You may want to create a random GUID e.g. via [https://www.guidgenerator.com/](https://www.guidgenerator.com/)
+
+    <b>Credit card information for testing purposes with 3D secure</b>
+
+    Card number: <i>4012 0003 0000 1003</i> </br>
+    CVV: <i>003</i> </br>
+    Expiration date: <i>01/23</i> </br>
+    3D verification password: <i>wirecard</i>
+
+    You can have a look at the overview of the transaction via: <b>https://{hostname}/engine/rest/merchants/{merchant-account-id}/payments/search?payment.request-id={request-id}</b>
+    <ul>
+      <li>{hostname}: api-test.wirecard.com</li>
+      <li>{merchant-account-id}: Use the appropriate test merchant account id</li>
+      <li>{request-id}: Use the appropriate request id</li>
+    </ul>
+
+    These requests are for the hosted payment page integration. If you want to have an embedded integration, please check the integration guide: [https://doc.wirecard.com/IntegrationGuides_WPP_v2.html#PaymentPageSolutions_PPv2_EPP_Integration](https://doc.wirecard.com/IntegrationGuides_WPP_v2.html#PaymentPageSolutions_PPv2_EPP_Integration)
+  termsOfService: "https://www.wirecard.com/legal-notice"
+  contact:
+    name: Wirecard AG
+    email: support@wirecard.com
+    url: "https://www.wirecard.com"
+servers:
+  - url: https://wpp-test.wirecard.com/api/payment
+    description: Wirecard Payment Page v2 (WPP v2) - Test environment Munich
+paths:
+  /register#authorization:
+    post:
+      summary: Creates a payment session of transaction type 'authorization' and returns a redirect URL if successful. Otherwise an error and an error description is returned.
+      tags:
+        - authorization
+      description: |
+        <b>Payment-Processing of type *authorization* with a credit card</b>
+
+        A consumer wants to buy something, but the transfer of money will take place later in time, e.g. when the product is sent to the consumer. As a merchant, I want to make sure that the consumer has enough money to pay the bill and ensure that the money is reserved until I transfer it. 
+
+        To enable that, the transaction type <i>authorization</i> checks if the consumer has enough money and reserves it for a specific time frame. When the merchant wants to receive the money, the reserved funds will be transferred to the merchant's bank account via the <i>capture-authorization</i>. To free the reserved funds if the transaction is canceled, the <i>void-authorization</i> is used.
+
+        <b>Steps to create an <i>authorization</i> with a credit card</b>
+
+        <ol>
+          <li><b>Create a payment session</b>
+            <ul>
+              <li>Send an initial POST request with transaction-type <i>authorization</i> and the payment-method <i>creditcard</i> to the Wirecard Payment Page v2. This POST request is secured by basic authentication.</li>
+            </ul>
+          </li>
+          <li><b>Redirect the consumer to the Wirecard Payment Page (initial response URL)</b>
+            <ul>
+              <li>For this example: Click ‘Try it out’ and then ‘Execute’ to execute the POST request in <b>step 1</b>.</li>
+              <li>If the POST request is correct, you receive an initial response URL. Use it to redirect your consumer to the payment page (for this example, copy the URL and open it). After that, the consumer can fill out the required fields on the payment page and submit the payment. For this example, input the following test credentials and submit the payment: <a href="https://doc.wirecard.com/CC_Main.html#PPv2_CC_3DSecure_TestCredentials">https://doc.wirecard.com/CC_Main.html#PPv2_CC_3DSecure_TestCredentials</a></li>
+              <li>If the POST request is incorrect, an error code is returned in the response. It contains a description of the problem. Return to <b>step 1</b> and create a new payment session with the right details.</li>
+            </ul>
+          </li>
+          <li><b>Parse and process the payment response</b>
+            <ul>
+              <li>There are three different possible results for the transaction-state after the payment is processed (<i>successful</i>, <i>failed</i> and <i>canceled</i>). You can redirect the consumer to different pages for each state. The WPP v2 sends a POST request containing base64 encoded payment data to the same URL. It is highly recommended that you parse and process this base64 encoded response to verify the payment.</li>
+              <li>Now, the payment process is complete.</li>
+            </ul>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/authorization-request"
+      responses:
+        "202":
+          $ref: "#/components/responses/redirect-response"
+        "400":
+          $ref: "#/components/responses/bad-request-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+  /register#purchase:
+    post:
+      summary: Creates a payment session of transaction type 'purchase' and returns a redirect URL if successful. Otherwise an error and an error description is returned.
+      tags:
+        - purchase
+      description: |
+        <b>Payment-Processing of type <i>purchase</i> with a credit card</b>
+
+        As a merchant, when someone buys something, I want to immediately charge the amount and transfer it to my bank account.
+
+        To enable that, the transaction type <i>purchase</i> transfers the transaction amount without preceding reservation from the consumer directly to the merchant. A one-step process to conduct two transaction types: <i>authorization</i> and <i>capture</i>. This transaction type is in most cases used for immediate online payments, such as software downloads.
+
+        A <i>purchase</i> can be a stand-alone transaction. It may be followed by a <i>void-purchase</i>, a <i>referenced-purchase</i> or a <i>refund-purchase</i>. A <i>refund-purchase</i> may be followed by a <i>void-refund-purchase</i>.
+
+        <i>Void-purchase</i>: Stops a completed purchase, as long as the fund's transfer has not been initiated.
+
+        <i>Refund-purchase</i>: A request to refund the consumer after the fund's transfer has been initiated and the purchase has been canceled.
+
+        <i>Void-refund-purchase</i>: Stops a <i>refund-purchase</i>, as long as the fund's transfer has not been initiated.
+
+        <i>Referenced-purchase</i>: For periodically repeating payments. It always refers to a purchase transaction.
+
+        <b>Steps to create a <i>purchase</i> with a credit card</b>
+
+        <ol>
+          <li><b>Create a payment session</b>
+            <ul>
+              <li>Send an initial POST request with transaction-type <i>purchase</i> and the payment-method <i>creditcard</i> to the Wirecard Payment Page v2. This POST request is secured by basic authentication.</li>
+            </ul>
+          </li>
+          <li><b>Redirect the consumer to the Wirecard Payment Page (initial response URL)</b>
+            <ul>
+              <li>For this example: Click ‘Try it out’ and then ‘Execute’ to execute the POST request in <b>step 1</b>.</li>
+              <li>If the POST request is correct, you receive an initial response URL. Use it to redirect your consumer to the payment page (for this example, copy the URL and open it). After that, the consumer can fill out the required fields on the payment page and submit the payment. For this example, input the following test credentials and submit the payment: <a href="https://doc.wirecard.com/CC_Main.html#PPv2_CC_3DSecure_TestCredentials">https://doc.wirecard.com/CC_Main.html#PPv2_CC_3DSecure_TestCredentials</a></li>
+              <li>If the POST request is incorrect, an error code is returned in the response. It contains a description of the problem. Return to <b>step 1</b> and create a new payment session with the right details.</li>
+            </ul>
+          </li>
+          <li><b>Parse and process the payment response</b>
+            <ul>
+              <li>There are three different possible results for the transaction-state after the payment is processed (<i>successful</i>, <i>failed</i> and <i>canceled</i>). You can redirect the consumer to different pages for each state. The WPP v2 sends a POST request containing base64 encoded payment data to the same URL. It is highly recommended that you parse and process this base64 encoded response to verify the payment.</li>
+              <li>Now, the payment process is complete.</li>
+            </ul>
+          </li>
+        </ol>
+      requestBody:
+        $ref: "#/components/requestBodies/purchase-request"
+      responses:
+        "202":
+          $ref: "#/components/responses/redirect-response"
+        "400":
+          $ref: "#/components/responses/bad-request-response"
+        "401":
+          $ref: "#/components/responses/unauthorized-response"
+components:
+  requestBodies:
+    authorization-request:
+      description: Authorization request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "53167555-a6e2-476e-b209-30c92c7ed79e"
+              transaction-type: "authorization"
+              requested-amount:
+                value: "99.90"
+                currency: "EUR"
+              account-holder:
+                first-name: "Jane"
+                last-name: "Doe"
+              payment-methods:
+                payment-method:
+                  - name: "creditcard"
+              three-d:
+                attempt-three-d: true
+              success-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/success"
+              fail-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/error"
+              cancel-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+    purchase-request:
+      description: Purchase request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/request-schema"
+          example:
+            payment:
+              merchant-account-id:
+                value: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              request-id: "67b2506b-99da-4b99-a944-de01a72e2b52"
+              transaction-type: "purchase"
+              requested-amount:
+                value: "99.90"
+                currency: "EUR"
+              account-holder:
+                first-name: "Jane"
+                last-name: "Doe"
+              payment-methods:
+                payment-method:
+                  - name: "creditcard"
+              three-d:
+                attempt-three-d: true
+              success-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/success"
+              fail-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/error"
+              cancel-redirect-url: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+  responses:
+    redirect-response:
+      description: Response body </br> A redirect URL to be used for redirecting your consumer to Wirecard Payment Page v2 (WPP v2) for submitting a payment. If the credentials are valid, the consumer is redirected to a success redirect URL. Otherwise, the consumer is redirected to a fail or cancel redirect URL.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/response-schema"
+          example:
+            payment-redirect-url: "https://wpp-test.wirecard.com/?wPaymentToken=qcSq1LdWdz8FPs7JzmnLtbGc2BSPaOTKM2VSHdDnozg"
+    bad-request-response:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error-schema"
+          example:
+            errors:
+              code: "E4004"
+              description: Duplicate request
+    unauthorized-response:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error-schema"
+          example:
+            errors:
+              code: "E1999"
+              description: Full authentication is required to access this resource.
+  schemas:
+    request-schema:
+      title: Request
+      type: object
+      properties:
+        payment:
+          type: object
+          properties:
+            merchant-account-id:
+              type: object
+              properties:
+                value:
+                  type: string
+                  example: "cad16b4a-abf2-450d-bcb8-1725a4cef443"
+              required:
+                - value
+            request-id:
+              type: string
+              example: "67b2506b-99da-4b99-a944-de01a72e2b52"
+            transaction-type:
+              type: string
+              example: "purchase"
+            requested-amount:
+              type: object
+              properties:
+                value:
+                  type: string
+                  example: "99.90"
+                currency:
+                  type: string
+                  example: "EUR"
+              required:
+                - value
+                - currency
+            account-holder:
+              type: object
+              properties:
+                first-name:
+                  type: string
+                  example: "Jane"
+                last-name:
+                  type: string
+                  example: "Doe"
+              required:
+                - first-name
+                - last-name
+            payment-methods:
+              type: object
+              properties:
+                payment-method:
+                  type: array
+                  items:
+                    properties:
+                      name:
+                        type: string
+                        example: "creditcard"
+            three-d:
+              type: object
+              properties:
+                attempt-three-d:
+                  type: string
+                  example: true
+            success-redirect-url:
+              type: string
+              example: "https://demoshop-test.wirecard.com/demoshop/#/success"
+            fail-redirect-url:
+              type: string
+              example: "https://demoshop-test.wirecard.com/demoshop/#/error"
+            cancel-redirect-url:
+              type: string
+              example: "https://demoshop-test.wirecard.com/demoshop/#/cancel"
+          required:
+            - merchant-account-id
+            - request-id
+            - transaction-type
+            - requested-amount
+            - account-holder
+            - three-d
+            - success-redirect-url
+            - fail-redirect-url
+            - cancel-redirect-url
+      required:
+        - payment
+    response-schema:
+      title: Response
+      type: object
+      properties:
+        payment-redirect-url:
+          type: string
+          example: "https://wpp-test.wirecard.com/?wPaymentToken=qcSq1LdWdz8FPs7JzmnLtbGc2BSPaOTKM2VSHdDnozg"
+    error-schema:
+      title: Error
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            properties:
+              code:
+                type: string
+                example: "E4004"
+              description:
+                type: string
+                example: "Duplicate request"
+      required:
+        - code
+        - description
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+security:
+  - basicAuth: []
+externalDocs:
+  description: "Wirecard Payment Page v2: Online Documentation: Integration Guide"
+  url: https://doc.wirecard.com/IntegrationGuides_WPP_v2.html
