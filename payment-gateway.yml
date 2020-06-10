@@ -11,17 +11,17 @@ info:
 
     ```
                       authorization                               purchase
-                            +                                         +
-                            +                                         +
                             |                                         |
-                 +----------++----------+                      +------++------+
+                            |                                         |
+                            |                                         |
+                 +----------+-----------+                      +------+-------+
                  |                      |                      |              |
                  v                      v                      v              v
         capture-authorization   void-authorization      refund-purchase  void-purchase
-                 +
-                 +
                  |
-          +------++------+
+                 |
+                 |
+          +------+-------+
           |              |
           v              v
       void-capture  refund-capture
