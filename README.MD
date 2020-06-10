@@ -1,6 +1,6 @@
 # YAML Files as OpenAPI documentation
 
-With the help of the already existing documentation on https://doc.wirecard.com/ YAML files are created using Swagger Editor in close cooperation with Wirecard. These files picture the most common workflows in a simple and user-friendly way.
+With the help of the already existing documentation on https://doc.wirecard.com/ YAML files are created using Swagger Editor. These files picture the most common workflows in a simple and user-friendly way.
 
 Workflows:
 
@@ -17,4 +17,4 @@ Workflows:
    - Void with Credit Card
    - Debit with PayPal
 
-To use the Wirecard test Rest service Basic Authentication is needed. To not avoid the developer, a user-friendly solution is found and implemented.
+To use the Wirecard test Rest service Basic Authentication is needed.
